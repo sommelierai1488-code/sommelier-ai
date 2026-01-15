@@ -43,7 +43,7 @@ def get_random_products(limit: int = DEFAULT_RECOMMENDATIONS_COUNT) -> List[Dict
                 availability_status
             FROM products
             WHERE
-                availability_status = 'available'
+                availability_status IN ('available', 'in_stock')
                 AND price_current IS NOT NULL
                 AND name IS NOT NULL
             ORDER BY RANDOM()
