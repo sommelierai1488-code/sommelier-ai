@@ -26,11 +26,36 @@ from .config import API_TITLE, API_VERSION, API_DESCRIPTION, DEFAULT_RECOMMENDAT
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Tags metadata for Swagger documentation
+tags_metadata = [
+    {
+        "name": "Session Management",
+        "description": "Управление сессиями пользователей: создание, сохранение квиза, завершение."
+    },
+    {
+        "name": "Recommendations",
+        "description": "Получение рекомендаций товаров на основе ответов квиза."
+    },
+    {
+        "name": "Events",
+        "description": "Отслеживание событий взаимодействия пользователя с товарами (лайки/дизлайки)."
+    },
+    {
+        "name": "Cart",
+        "description": "Управление корзиной: добавление, просмотр, удаление товаров."
+    },
+    {
+        "name": "Health",
+        "description": "Проверка состояния сервиса."
+    }
+]
+
 # Create FastAPI app
 app = FastAPI(
     title=API_TITLE,
     version=API_VERSION,
-    description=API_DESCRIPTION
+    description=API_DESCRIPTION,
+    openapi_tags=tags_metadata
 )
 
 # Add CORS middleware to allow frontend requests
@@ -43,7 +68,7 @@ app.add_middleware(
 )
 
 
-@app.get("/")
+@app.get("/", tags=["Health"])
 async def root():
     """Health check endpoint"""
     return {
@@ -53,7 +78,7 @@ async def root():
     }
 
 
-@app.post("/offers/recommend", response_model=RecommendResponse)
+@app.post("/offers/recommend", response_model=RecommendResponse, tags=["Recommendations"])
 async def recommend_offers(request: RecommendRequest):
     """
     Get product recommendations based on quiz results
@@ -101,7 +126,7 @@ async def recommend_offers(request: RecommendRequest):
         )
 
 
-@app.get("/health")
+@app.get("/health", tags=["Health"])
 async def health_check():
     """
     Health check endpoint for monitoring
@@ -116,7 +141,7 @@ async def health_check():
     }
 
 
-@app.post("/session/events", response_model=BatchSessionEventsResponse)
+@app.post("/session/events", response_model=BatchSessionEventsResponse, tags=["Events"])
 async def create_session_events(request: BatchSessionEventsRequest):
     """
     Create session events in batch (user interactions with products)
@@ -171,7 +196,7 @@ async def create_session_events(request: BatchSessionEventsRequest):
 # SESSION MANAGEMENT ENDPOINTS
 # ============================================
 
-@app.post("/sessions/start", response_model=SessionStartResponse)
+@app.post("/sessions/start", response_model=SessionStartResponse, tags=["Session Management"])
 async def start_session(request: SessionStartRequest):
     """
     Start a new session
@@ -202,7 +227,7 @@ async def start_session(request: SessionStartRequest):
         )
 
 
-@app.post("/sessions/{session_id}/quiz", response_model=SessionQuizResponse)
+@app.post("/sessions/{session_id}/quiz", response_model=SessionQuizResponse, tags=["Session Management"])
 async def save_session_quiz(session_id: int, request: SessionQuizRequest):
     """
     Save quiz answers for a session (UPSERT)
@@ -247,7 +272,7 @@ async def save_session_quiz(session_id: int, request: SessionQuizRequest):
         )
 
 
-@app.post("/sessions/{session_id}/complete", response_model=SessionCompleteResponse)
+@app.post("/sessions/{session_id}/complete", response_model=SessionCompleteResponse, tags=["Session Management"])
 async def complete_session_endpoint(session_id: int):
     """
     Mark session as completed
@@ -287,7 +312,7 @@ async def complete_session_endpoint(session_id: int):
 # CART MANAGEMENT ENDPOINTS
 # ============================================
 
-@app.post("/sessions/{session_id}/cart", response_model=AddToCartResponse)
+@app.post("/sessions/{session_id}/cart", response_model=AddToCartResponse, tags=["Cart"])
 async def add_item_to_cart(session_id: int, request: AddToCartRequest):
     """
     Add or update item in cart (UPSERT)
@@ -328,7 +353,7 @@ async def add_item_to_cart(session_id: int, request: AddToCartRequest):
         )
 
 
-@app.get("/sessions/{session_id}/cart", response_model=GetCartResponse)
+@app.get("/sessions/{session_id}/cart", response_model=GetCartResponse, tags=["Cart"])
 async def get_session_cart(session_id: int):
     """
     Get cart for a session
@@ -359,7 +384,7 @@ async def get_session_cart(session_id: int):
         )
 
 
-@app.delete("/sessions/{session_id}/cart/{sku}")
+@app.delete("/sessions/{session_id}/cart/{sku}", tags=["Cart"])
 async def remove_item_from_cart(session_id: int, sku: str):
     """
     Remove item from cart
