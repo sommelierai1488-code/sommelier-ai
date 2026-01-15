@@ -4,6 +4,7 @@
 -- ============================================
 -- TABLE 1: PRODUCTS
 -- ============================================
+DROP TABLE IF EXISTS session_events CASCADE;
 DROP TABLE IF EXISTS session_cart CASCADE;
 DROP TABLE IF EXISTS session_feedback CASCADE;
 DROP TABLE IF EXISTS session_quiz CASCADE;
@@ -67,7 +68,7 @@ COMMENT ON TABLE users IS 'Пользователи системы (или ан�
 CREATE TABLE sessions (
     session_id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(user_id) ON DELETE SET NULL,
-    status VARCHAR(20) CHECK (status IN ('completed', 'abandoned')),
+    status VARCHAR(20) CHECK (status IN ('in_progress', 'completed', 'abandoned')) DEFAULT 'in_progress',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -86,15 +87,16 @@ CREATE TABLE session_quiz (
     session_id INTEGER PRIMARY KEY REFERENCES sessions(session_id) ON DELETE CASCADE,
     occasion VARCHAR(100),
     style VARCHAR(100),
-    drink_type VARCHAR(100),
-    taste VARCHAR(100),
+    drink_types JSONB,
+    tastes JSONB,
     people_count INTEGER,
     budget_bucket VARCHAR(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Indexes for session_quiz
-CREATE INDEX idx_session_quiz_drink_type ON session_quiz(drink_type);
+CREATE INDEX idx_session_quiz_drink_types ON session_quiz USING GIN (drink_types);
+CREATE INDEX idx_session_quiz_tastes ON session_quiz USING GIN (tastes);
 CREATE INDEX idx_session_quiz_budget_bucket ON session_quiz(budget_bucket);
 
 COMMENT ON TABLE session_quiz IS 'Ответы на 6 вопросов + бюджет (1:1 с sessions)';
@@ -136,6 +138,26 @@ CREATE INDEX idx_session_cart_session_id ON session_cart(session_id);
 CREATE INDEX idx_session_cart_sku ON session_cart(sku);
 
 COMMENT ON TABLE session_cart IS 'Финальная корзина сессии';
+
+-- ============================================
+-- TABLE 7: SESSION_EVENTS (Event stream of user interactions)
+-- ============================================
+CREATE TABLE session_events (
+    action_id SERIAL PRIMARY KEY,
+    session_id INTEGER REFERENCES sessions(session_id) ON DELETE CASCADE,
+    sku VARCHAR(50) REFERENCES products(sku) ON DELETE CASCADE,
+    action VARCHAR(10) CHECK (action IN ('like', 'dislike', 'none')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Indexes for session_events
+CREATE INDEX idx_session_events_session_id ON session_events(session_id);
+CREATE INDEX idx_session_events_sku ON session_events(sku);
+CREATE INDEX idx_session_events_action ON session_events(action);
+CREATE INDEX idx_session_events_created_at ON session_events(created_at);
+CREATE INDEX idx_session_events_session_sku ON session_events(session_id, sku);
+
+COMMENT ON TABLE session_events IS 'Река событий - все взаимодействия пользователя с товарами в рамках сессии';
 
 -- ============================================
 -- TRIGGERS
