@@ -2,13 +2,13 @@
 
 ## Публичный URL
 
-**API доступно по адресу:** `http://45.12.136.239:8000`
+**API доступно по адресу:** `http://89.169.170.231:8000`
 
 ## Endpoints
 
 ### 1. Health Check
 ```bash
-curl http://45.12.136.239:8000/
+curl http://89.169.170.231:8000/
 ```
 
 **Ответ:**
@@ -22,7 +22,7 @@ curl http://45.12.136.239:8000/
 
 ### 2. Получить рекомендации
 ```bash
-curl -X POST "http://45.12.136.239:8000/offers/recommend" \
+curl -X POST "http://89.169.170.231:8000/offers/recommend" \
   -H "Content-Type: application/json" \
   -d '{
     "occasion": "🎉 Вечеринка",
@@ -36,15 +36,15 @@ curl -X POST "http://45.12.136.239:8000/offers/recommend" \
 
 ### 3. Интерактивная документация
 
-- **Swagger UI:** http://45.12.136.239:8000/docs
-- **ReDoc:** http://45.12.136.239:8000/redoc
+- **Swagger UI:** http://89.169.170.231:8000/docs
+- **ReDoc:** http://89.169.170.231:8000/redoc
 
 ## Использование в приложении
 
 ### JavaScript / TypeScript
 
 ```typescript
-const response = await fetch('http://45.12.136.239:8000/offers/recommend', {
+const response = await fetch('http://89.169.170.231:8000/offers/recommend', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
@@ -71,7 +71,7 @@ import axios from 'axios';
 const getRecommendations = async (quizData) => {
   try {
     const response = await axios.post(
-      'http://45.12.136.239:8000/offers/recommend',
+      'http://89.169.170.231:8000/offers/recommend',
       quizData
     );
     return response.data.offers;
